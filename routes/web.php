@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\RegisterController;
 
 // ── Guest-only routes ─────────────────────────────────────────────────────────
-// Override Breeze's register with our custom one
+Route::get('/', fn() => view('welcome'));
 Route::middleware('guest')->group(function () {
     Route::get('/register',  [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
@@ -24,7 +24,16 @@ require __DIR__ . '/auth.php';
 Route::middleware(['auth', 'role'])->group(function () {
 
     // Dashboard — shows correct view based on role
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
+
+    Route::prefix('chama')->name('chama.')->middleware('role:admin')->group(function () {
+    Route::get('/settings',     [\App\Http\Controllers\ChamaController::class, 'settings'])
+        ->name('settings');
+    Route::put('/settings',     [\App\Http\Controllers\ChamaController::class, 'updateSettings'])
+        ->name('settings.update');
+    Route::post('/regenerate-code', [\App\Http\Controllers\ChamaController::class, 'regenerateCode'])
+        ->name('regenerate-code');
+    });
 
     // ── Contributions ──────────────────────────────────────────────
     Route::prefix('contributions')->name('contributions.')->group(function () {
@@ -80,4 +89,13 @@ Route::middleware(['auth', 'role'])->group(function () {
             Route::get('/audit-logs',             [AdminController::class, 'auditLogs'])->name('audit');
             Route::get('/audit-logs/export',      [AdminController::class, 'exportAuditLogs'])->name('audit.export');
         });
+
+        // ── Chama Registration  ──────────────
+       // This is where a new group comes to create their chama
+    Route::middleware('guest')->group(function () {
+      Route::get('/create-chama',  [\App\Http\Controllers\ChamaController::class, 'registerForm'])
+        ->name('chama.register');
+      Route::post('/create-chama', [\App\Http\Controllers\ChamaController::class, 'register'])
+        ->name('chama.register.store');
+       });
 });

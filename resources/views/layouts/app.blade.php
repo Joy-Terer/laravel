@@ -68,26 +68,34 @@
         @endif
 
         @if(auth()->user()->role === 'admin')
-        <div class="nav-section-label">Admin</div>
-
-        <div class="nav-item">
-            <a href="{{ route('admin.members') }}"
-               class="nav-link {{ request()->routeIs('admin.members') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> Members
-                @php $pending = \App\Models\User::where('status','pending')->count(); @endphp
-                @if($pending > 0)
-                    <span class="nav-badge">{{ $pending }}</span>
-                @endif
-            </a>
-        </div>
-
-        <div class="nav-item">
-            <a href="{{ route('admin.audit') }}"
-               class="nav-link {{ request()->routeIs('admin.audit') ? 'active' : '' }}">
-                <i class="bi bi-shield-check"></i> Audit Logs
-            </a>
-        </div>
-        @endif
+    <div class="nav-section-label">Admin</div>
+ 
+    <div class="nav-item">
+        <a href="{{ route('admin.members') }}"
+           class="nav-link {{ request()->routeIs('admin.members') ? 'active' : '' }}">
+            <i class="bi bi-people"></i> Members
+            @php $pending = \App\Models\User::where('chama_id', auth()->user()->chama_id)->where('status','pending')->count(); @endphp
+            @if($pending > 0)
+                <span class="nav-badge">{{ $pending }}</span>
+            @endif
+        </a>
+    </div>
+ 
+    <div class="nav-item">
+        <a href="{{ route('admin.audit') }}"
+           class="nav-link {{ request()->routeIs('admin.audit') ? 'active' : '' }}">
+            <i class="bi bi-shield-check"></i> Audit Logs
+        </a>
+    </div>
+ 
+    {{-- ADD THIS NEW LINK --}}
+    <div class="nav-item">
+        <a href="{{ route('chama.settings') }}"
+           class="nav-link {{ request()->routeIs('chama.settings') ? 'active' : '' }}">
+            <i class="bi bi-gear"></i> Chama Settings
+        </a>
+    </div>
+@endif
 
         <div class="nav-section-label">Account</div>
  
@@ -188,3 +196,5 @@
 @stack('scripts')
 </body>
 </html>
+
+

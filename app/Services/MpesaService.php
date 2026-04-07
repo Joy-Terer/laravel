@@ -2,38 +2,29 @@
 
 namespace App\Services;
 
+use App\Models\Chama;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class MpesaService
 {
     private string $baseUrl;
-    private string $consumerKey;
-    private string $consumerSecret;
-    private string $shortCode;
-    private string $passKey;
-    private string $callbackUrl;
 
     public function __construct()
     {
         $env = config('mpesa.env', 'sandbox');
-
-        $this->baseUrl        = $env === 'production'
+        $this->baseUrl = $env === 'production'
             ? 'https://api.safaricom.co.ke'
             : 'https://sandbox.safaricom.co.ke';
-
-        $this->consumerKey    = config('mpesa.consumer_key');
-        $this->consumerSecret = config('mpesa.consumer_secret');
-        $this->shortCode      = config('mpesa.shortcode');
-        $this->passKey        = config('mpesa.passkey');
-        $this->callbackUrl    = config('mpesa.callback_url');
     }
 
-    // ── Get OAuth token ───────────────────────────────────────────
-    private function getAccessToken(): ?string
-    {
+    // ── Get access token (per-chama or platform) ──────────────────
+    private function getAccessToken(
+        string $consumerKey,
+        string $consumerSecret
+    ): ?string {
         try {
-            $credentials = base64_encode("{$this->consumerKey}:{$this->consumerSecret}");
+            $credentials = base64_encode("{$consumerKey}:{$consumerSecret}");
 
             $response = Http::withHeaders([
                 'Authorization' => "Basic {$credentials}",
@@ -46,34 +37,51 @@ class MpesaService
         }
     }
 
-    // ── STK Push ──────────────────────────────────────────────────
+    // ── STK Push (uses chama's own credentials if available) ──────
     public function stkPush(
-        string $phone,
-        int    $amount,
-        string $ref,
-        string $desc
+        string  $phone,
+        int     $amount,
+        string  $ref,
+        string  $desc,
+        ?Chama  $chama = null
     ): array {
-        $token = $this->getAccessToken();
+        // Use chama's credentials if they have their own, else fall back to platform
+        $consumerKey    = ($chama?->mpesa_consumer_key) ?: config('mpesa.consumer_key');
+        $consumerSecret = ($chama?->mpesa_consumer_secret) ?: config('mpesa.consumer_secret');
+        $shortCode      = ($chama?->mpesa_shortcode) ?: config('mpesa.shortcode');
+        $passKey        = ($chama?->mpesa_passkey) ?: config('mpesa.passkey');
+        $callbackUrl    = config('mpesa.callback_url');
+
+        if (!$consumerKey || !$consumerSecret) {
+            return [
+                'success' => false,
+                'message' => 'M-Pesa is not configured for this chama. Please update your chama settings.',
+            ];
+        }
+
+        $token = $this->getAccessToken($consumerKey, $consumerSecret);
 
         if (!$token) {
             return ['success' => false, 'message' => 'Could not get M-Pesa access token.'];
         }
 
         $timestamp = now()->format('YmdHis');
-        $password  = base64_encode($this->shortCode . $this->passKey . $timestamp);
+        $password  = base64_encode($shortCode . $passKey . $timestamp);
 
         try {
             $response = Http::withToken($token)
                 ->post("{$this->baseUrl}/mpesa/stkpush/v1/processrequest", [
-                    'BusinessShortCode' => $this->shortCode,
+                    'BusinessShortCode' => $shortCode,
                     'Password'          => $password,
                     'Timestamp'         => $timestamp,
-                    'TransactionType'   => 'CustomerPayBillOnline',
+                    'TransactionType'   => $chama?->mpesa_type === 'till'
+                        ? 'CustomerBuyGoodsOnline'
+                        : 'CustomerPayBillOnline',
                     'Amount'            => $amount,
                     'PartyA'            => $phone,
-                    'PartyB'            => $this->shortCode,
+                    'PartyB'            => $shortCode,
                     'PhoneNumber'       => $phone,
-                    'CallBackURL'       => $this->callbackUrl,
+                    'CallBackURL'       => $callbackUrl,
                     'AccountReference'  => $ref,
                     'TransactionDesc'   => $desc,
                 ]);
