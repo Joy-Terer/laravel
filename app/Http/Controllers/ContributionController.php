@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ContributionRequest;
 use App\Models\Contribution;
 use App\Models\AuditLog;
@@ -10,6 +11,7 @@ use App\Services\PayPalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class ContributionController extends Controller
 {
@@ -91,10 +93,18 @@ class ContributionController extends Controller
     public function mpesaCallback(Request $request)
     {
         $body       = $request->input('Body.stkCallback');
+        if(!$body  || !isset($body['CheckoutRequestID']) || !isset($body['ResultCode'])) {
+            Log::warning('Invalid M-Pesa callback received!', ['ip' => $request->ip(),
+            'payload' => $request->all()
+            ]);
+            return response()->json(['ResultCode' => 1, 'ResultDesc' => 'Invalid callback data']);
+        }
         $resultCode = $body['ResultCode'] ?? 1;
         $checkoutId = $body['CheckoutRequestID'] ?? null;
 
-        $contribution = Contribution::where('transaction_ref', $checkoutId)->first();
+        $contribution = Contribution::where('transaction_ref', $checkoutId)
+           ->where('status', 'pending')
+           ->first();
         if (!$contribution) {
             return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
         }
@@ -103,6 +113,7 @@ class ContributionController extends Controller
             $meta    = collect($body['CallbackMetadata']['Item'] ?? []);
             $receipt = $meta->firstWhere('Name', 'MpesaReceiptNumber')['Value'] ?? null;
             $amount  = $meta->firstWhere('Name', 'Amount')['Value'] ?? $contribution->amount;
+            DB::transaction(function() use ($contribution, $receipt, $amount, $request) {
 
             $contribution->update([
                 'status'           => 'completed',
@@ -118,7 +129,9 @@ class ContributionController extends Controller
                 'description' => "{$contribution->user->name} contributed KES " . number_format($amount, 0) . " via M-Pesa. Ref: {$receipt}",
                 'ip_address'  => $request->ip(),
             ]);
-        } else {
+            });  
+        } else 
+        {
             $contribution->update(['status' => 'failed']);
         }
 
@@ -128,6 +141,14 @@ class ContributionController extends Controller
     // ── PayPal ────────────────────────────────────────────────────
     private function processPayPal($request, $user, $chama)
     {
+        $data    = session('paypal_contribution');
+        $orderId = $request->get('token');
+        if (!$data || !isset($data['order_id']) || $orderId !== $data['order_id']) {
+            Log::warning('PayPal token mismatch', ['user_id' => Auth::id(), 'token' => $orderId]);
+            return redirect()->route('contributions.create')
+                ->withErrors(['payment' => 'Invalid payment session. Please try again.']);
+        }
+
         $order = $this->paypal->createOrder($request->amount, $user->id, $chama->id);
 
         if ($order['success']) {

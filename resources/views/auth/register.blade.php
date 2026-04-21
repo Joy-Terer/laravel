@@ -70,58 +70,42 @@
                 @csrf
 
                 <div class="auth-form-row-2">
-
                     <div class="auth-form-group">
                         <label class="auth-form-label">First Name</label>
-                        <input type="text" name="first_name"
-                               class="auth-input"
-                               value="{{ old('first_name') }}" required>
+                        <input type="text" name="first_name" class="auth-input" value="{{ old('first_name') }}" required>
                     </div>
 
                     <div class="auth-form-group">
                         <label class="auth-form-label">Last Name</label>
-                        <input type="text" name="last_name"
-                               class="auth-input"
-                               value="{{ old('last_name') }}" required>
+                        <input type="text" name="last_name" class="auth-input" value="{{ old('last_name') }}" required>
                     </div>
-
                 </div>
 
                 <div class="auth-form-group">
                     <label class="auth-form-label">Email</label>
-                    <input type="email" name="email"
-                           class="auth-input"
-                           value="{{ old('email') }}" required>
+                    <input type="email" name="email" class="auth-input" value="{{ old('email') }}" required>
                 </div>
 
                 <div class="auth-form-group">
                     <label class="auth-form-label">Phone</label>
-                    <input type="text" name="phone"
-                           class="auth-input"
-                           placeholder="0712345678" required>
+                    <input type="text" name="phone" class="auth-input" placeholder="0712345678" required>
                 </div>
 
                 <div class="auth-form-group">
                     <label class="auth-form-label">Group Code</label>
-                    <input type="text" name="chama_code"
-                           class="auth-input"
-                           style="text-transform:uppercase" required>
+                    <input type="text" name="chama_code" class="auth-input" style="text-transform:uppercase" required>
                 </div>
 
                 <div class="auth-form-row-2">
-
                     <div class="auth-form-group">
                         <label class="auth-form-label">Password</label>
-                        <input type="password" name="password"
-                               class="auth-input" required>
+                        <input type="password" name="password" class="auth-input" required>
                     </div>
 
                     <div class="auth-form-group">
                         <label class="auth-form-label">Confirm Password</label>
-                        <input type="password" name="password_confirmation"
-                               class="auth-input" required>
+                        <input type="password" name="password_confirmation" class="auth-input" required>
                     </div>
-
                 </div>
 
                 <button type="submit" class="auth-btn">
@@ -130,8 +114,7 @@
             </form>
 
             <div class="auth-switch-link">
-                Already have an account?
-                <a href="{{ route('login') }}">Sign in</a>
+                Already have an account? <a href="{{ route('login') }}">Sign in</a>
             </div>
 
         </div>

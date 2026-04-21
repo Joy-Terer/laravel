@@ -48,7 +48,7 @@
                     </span>
                 </div>
                 <div class="profile-summary-row" style="border:none">
-                    <span class="profile-summary-label">Email Verified</span>
+                    <span class="profile-summary-label">Email Verification</span>
                     <span class="profile-summary-value">
                         @if(auth()->user()->email_verified_at)
                             <span class="badge-custom badge-success"><i class="bi bi-check-circle"></i> Yes</span>
@@ -172,15 +172,30 @@
                 </form>
             </div>
         </div>
+        <!-- LOGOUT -->
+        <div class="card mb-3">
+            <div class="card-body-custom">
+                <span class="card-title-custom">Logout from all devices</span>
+                <p style="font-size:13px;color:var(--text-secondary);margin:8px 0 16px">
+                    This will log you out from all active sessions on other devices. You will need to log in again on those devices to regain access.
+                </p>
+                <form method="POST" action="{{ route('profile.logout') }}">
+                    @csrf
+                    <button type="submit" class="btn-outline-custom">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
 
         <!-- DELETE ACCOUNT -->
         <div class="card card-danger-border">
             <div class="card-header-custom">
-                <span class="card-title-custom text-danger-custom">Danger Zone</span>
+                <span class="card-title-custom text-danger-custom">Delete Account</span>
             </div>
             <div class="card-body-custom">
                 <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
-                    Once your account is deleted, all data will be permanently removed. This action cannot be undone.
+                    WARNING! Once your account is deleted, all data will be permanently removed. Please make sure to download any important information before proceeding.
                 </p>
                 <button type="button" class="btn-danger-custom btn-sm"
                         onclick="document.getElementById('deleteModal').style.display='flex'">

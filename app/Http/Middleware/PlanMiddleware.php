@@ -10,7 +10,7 @@ class PlanMiddleware
 {
     public function handle(Request $request, Closure $next, string $feature = ''): Response
     {
-        $user  = auth()->user();
+        $user  = auth()->User();
         $chama = $user?->chama;
 
         if (!$chama) {

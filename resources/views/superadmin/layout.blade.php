@@ -61,10 +61,10 @@
     </nav>
     <div class="sidebar-user">
         <div class="user-avatar">
-            {{ strtoupper(substr(auth('superadmin')->user()->name, 0, 2)) }}
+            {{ strtoupper(substr(auth('superadmin')->user()->name ?? 'SA', 0, 2)) }}
         </div>
         <div class="sidebar-user-info">
-            <div class="user-name">{{ auth('superadmin')->user()->name }}</div>
+            <div class="user-name">{{ auth('superadmin')->user()->name ?? 'Superadmin' }}</div>
             <div class="user-role">Superadmin</div>
         </div>
         <form method="POST" action="{{ route('superadmin.logout') }}">

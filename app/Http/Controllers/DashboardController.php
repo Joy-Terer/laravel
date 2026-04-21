@@ -14,6 +14,9 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
+        if(!$user->chama_id) {
+            return redirect()->route('chama.create')->with('info', 'Please create or join a Chama to access the dashboard.');
+        }
 
         return match($user->role) {
             'admin'     => $this->adminDashboard(),
@@ -94,7 +97,10 @@ class DashboardController extends Controller
         $chama = $user->chama;
 
         $pendingMembers = User::where('chama_id', $chama->id)
-            ->where('status', 'pending')->get();
+           ->where(function($query) {
+             $query->where('status', 'pending')
+              ->orWhere('status', 'Pending');
+           })->get();
 
         $members = User::where('chama_id', $chama->id)
             ->where('status', 'active')->get();
@@ -104,8 +110,13 @@ class DashboardController extends Controller
 
         $totalLoans = Loan::where('chama_id', $chama->id)->sum('amount');
 
-        $recentActivities = AuditLog::with('user')
-            ->orderBy('created_at', 'desc')->take(10)->get();
+        $recentActivities = AuditLog::whereHas('user', function($query) use ($chama) {
+            $query->where('chama_id', $chama->id);
+        })
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
 
         // ── Chart data ────────────────────────────────────────────
         // Last 6 months labels

@@ -25,7 +25,7 @@
         </h1>
 
         <p class="auth-sub-text">
-            Register your savings group in minutes. No technical skills needed — just your chama details and M-Pesa number to get started.
+            Register your savings group in minutes. No technical skills needed — just your chama details and payment details to get started.
         </p>
 
         <div class="auth-steps">
@@ -39,8 +39,8 @@
             <div class="auth-step">
                 <div class="auth-step-num">2</div>
                 <div class="auth-step-text">
-                    <strong>Add your M-Pesa number</strong>
-                    Your Paybill or Till number for collecting contributions.
+                    <strong>Add your payment details</strong>
+                    Your preferred method for collecting contributions.
                 </div>
             </div>
             <div class="auth-step">
@@ -65,7 +65,7 @@
         <div class="auth-form-box auth-form-box-wide" style="max-width:520px">
 
             <h2 class="auth-form-title">Create your chama</h2>
-            <p class="auth-form-sub">Get started in under 3 minutes</p>
+            <p class="auth-form-sub">Fill in the details below to get started</p>
 
             @if($errors->any())
                 <div class="alert-custom alert-danger">
@@ -80,7 +80,6 @@
                 <!-- STEP 1: CHAMA DETAILS -->
                 <div class="reg-section">
                     <div class="reg-section-title">
-                        <span class="reg-step-num">1</span>
                         Chama Details
                     </div>
 
@@ -123,13 +122,13 @@
                             <div class="auth-input-group">
                                 <i class="bi bi-cash auth-input-icon"></i>
                                 <input type="number" name="contribution_amount"
-                                       value="{{ old('contribution_amount', 2000) }}"
+                                       value="{{ old('contribution_amount', 0) }}"
                                        class="auth-input {{ $errors->has('contribution_amount') ? 'error' : '' }}"
                                        min="100" required>
                             </div>
                         </div>
                         <div class="auth-form-group">
-                            <label class="auth-form-label">Frequency *</label>
+                            <label class="auth-form-label">How often do you contribute? *</label>
                             <select name="contribution_frequency" class="auth-input" required>
                                 <option value="monthly"   {{ old('contribution_frequency') === 'monthly'   ? 'selected' : '' }}>Monthly</option>
                                 <option value="weekly"    {{ old('contribution_frequency') === 'weekly'    ? 'selected' : '' }}>Weekly</option>
@@ -152,19 +151,11 @@
                 <div class="reg-section">
                     <div class="reg-section-title">
                         <span class="reg-step-num">2</span>
-                        M-Pesa Collection Details
-                    </div>
-
-                    <div class="alert-custom alert-info" style="margin-bottom:16px">
-                        <i class="bi bi-info-circle"></i>
-                        <div>
-                            Members will send contributions directly to your M-Pesa number.
-                            You can add your Daraja API keys later in Settings for automatic payment tracking.
-                        </div>
+                        Payment Details
                     </div>
 
                     <div class="auth-form-group">
-                        <label class="auth-form-label">M-Pesa Type *</label>
+                        <label class="auth-form-label">Payment Type *</label>
                         <div style="display:flex;gap:12px">
                             <label class="mpesa-type-option" id="opt-paybill">
                                 <input type="radio" name="mpesa_type" value="paybill"
@@ -179,6 +170,20 @@
                                        onchange="toggleMpesaType('till')">
                                 <i class="bi bi-shop"></i>
                                 <span>Till Number</span>
+                            </label>
+                            <label class="mpesa-type-option" id="opt-pochi">
+                                <input type="radio" name="mpesa_type" value="pochi"
+                                       {{ old('mpesa_type') === 'pochi' ? 'checked' : '' }}
+                                       onchange="toggleMpesaType('pochi')">
+                                <i class="bi bi-wallet2"></i>
+                                <span>Pochi La Biashara</span>
+                            </label>
+                            <label class="mpesa-type-option" id="opt-sendmoney">
+                                <input type="radio" name="mpesa_type" value="sendmoney"
+                                       {{ old('mpesa_type') === 'sendmoney' ? 'checked' : '' }}
+                                       onchange="toggleMpesaType('sendmoney')">
+                                <i class="bi bi-currency-exchange"></i>
+                                <span>Send Money</span>
                             </label>
                         </div>
                     </div>
@@ -208,12 +213,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="form-hint" style="margin-top:-8px;margin-bottom:12px">
-                        <i class="bi bi-lock" style="font-size:11px"></i>
-                        Daraja API keys are optional — add them later in Settings for automatic STK push payments.
-                    </div>
-                </div>
 
                 <!-- STEP 3: ADMIN ACCOUNT -->
                 <div class="reg-section">
@@ -275,7 +274,7 @@
                 </div>
 
                 <button type="submit" class="auth-btn">
-                    <i class="bi bi-rocket-takeoff"></i> Create My Chama
+                    <i class="bi bi-rocket-takeoff"></i> Create  Chama
                 </button>
 
             </form>
@@ -325,15 +324,28 @@
 function toggleMpesaType(type) {
     const label = document.getElementById('shortcode-label');
     const accountWrap = document.getElementById('account-name-wrap');
-    if (type === 'till') {
-        label.textContent = 'Till Number *';
-        accountWrap.style.display = 'none';
-    } else {
-        label.textContent = 'Paybill Number *';
+    const shortcodeInput = document.querySelector('input[name="mpesa_shortcode"]');
+
+    if (type === 'paybill') {
+        label.innerText = 'Paybill Number *';
+        shortcodeInput.placeholder = 'e.g. 522533';
         accountWrap.style.display = 'block';
+    } else if (type === 'till') {
+        label.innerText = 'Till Number *';
+        shortcodeInput.placeholder = 'e.g. 123456';
+        accountWrap.style.display = 'none';
+    } else if (type === 'pochi' || type === 'sendmoney') {
+        label.innerText = 'Phone Number *';
+        shortcodeInput.placeholder = 'e.g. 07XXXXXXXX';
+        accountWrap.style.display = 'none';
     }
 }
-</script>
 
+// Run on page load to ensure the correct UI shows if there are validation errors
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedType = document.querySelector('input[name="mpesa_type"]:checked').value;
+    toggleMpesaType(selectedType);
+});
+</script>
 </body>
 </html>

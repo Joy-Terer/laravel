@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Crypt;
 
 class ChamaController extends Controller
 {
@@ -28,6 +29,14 @@ class ChamaController extends Controller
         // Generate unique chama code
         $code = $this->generateChamaCode($request->chama_name);
 
+        $mpesaShortcode = match($request->mpesa_type) {
+            'paybill'    => $request->mpesa_shortcode,
+            'till'       => $request->mpesa_shortcode_till,
+            'pochi'      => $request->mpesa_shortcode_pochi,
+            'Send Money'  => $request->mpesa_shortcode_sendmoney,
+            default      => $request->mpesa_shortcode,
+        };
+
         // Create the chama
         $chama = Chama::create([
             'name'                   => $request->chama_name,
@@ -42,9 +51,12 @@ class ChamaController extends Controller
             'mpesa_type'             => $request->mpesa_type,
             'mpesa_shortcode'        => $request->mpesa_shortcode,
             'mpesa_account_name'     => $request->mpesa_account_name,
-            'mpesa_consumer_key'     => $request->mpesa_consumer_key,
-            'mpesa_consumer_secret'  => $request->mpesa_consumer_secret,
-            'mpesa_passkey'          => $request->mpesa_passkey,
+            'mpesa_consumer_key'     => $request->mpesa_consumer_key
+                ? Crypt::encryptString($request->mpesa_consumer_key) : null,
+            'mpesa_consumer_secret'  => $request->mpesa_consumer_secret
+                ? Crypt::encryptString($request->mpesa_consumer_secret) : null,
+            'mpesa_passkey'          => $request->mpesa_passkey
+                ? Crypt::encryptString($request->mpesa_passkey) : null,
             'is_active'              => true,
         ]);
 
@@ -61,7 +73,16 @@ class ChamaController extends Controller
         ]);
 
         // Link admin to chama
-        $chama->update(['admin_id' => $admin->id]);
+        $chama->update([ 
+            'mpesa_consumer_key'    => $request->mpesa_consumer_key
+            ? Crypt::encryptString($request->mpesa_consumer_key) : null,    
+            'mpesa_consumer_secret' => $request->mpesa_consumer_secret
+            ? Crypt::encryptString($request->mpesa_consumer_secret) : null,
+            'mpesa_passkey'         => $request->mpesa_passkey
+            ? Crypt::encryptString($request->mpesa_passkey) : null,]);
+
+        $chama->update(['admin_id' => $admin->id]);     
+    
 
         // Assign free plan + 14-day Premium trial
         $premiumPlan = Plan::where('slug', 'premium')->first();
@@ -114,6 +135,11 @@ class ChamaController extends Controller
     {
         $chama = Auth::user()->chama;
 
+        if ($request->hasFile('chama_logo')) {
+            $logoPath = $request->file('chama_logo')->store('chama_logos', 'logo_' . $chama->id . '_' . $request->file('chama_logo')->extension(), 'private');
+            $chama->update(['logo_path' => $logoPath]);
+        }
+
         $chama->update([
             'name'                   => $request->name,
             'description'            => $request->description,
@@ -129,11 +155,11 @@ class ChamaController extends Controller
 
             // Only update API keys if provided (don't overwrite with empty)
             'mpesa_consumer_key'    => $request->filled('mpesa_consumer_key')
-                ? $request->mpesa_consumer_key : $chama->mpesa_consumer_key,
+                ? Crypt::encryptString($request->mpesa_consumer_key) : $chama->mpesa_consumer_key,
             'mpesa_consumer_secret' => $request->filled('mpesa_consumer_secret')
-                ? $request->mpesa_consumer_secret : $chama->mpesa_consumer_secret,
+                ? Crypt::encryptString($request->mpesa_consumer_secret) : $chama->mpesa_consumer_secret,
             'mpesa_passkey'         => $request->filled('mpesa_passkey')
-                ? $request->mpesa_passkey : $chama->mpesa_passkey,
+                ? Crypt::encryptString($request->mpesa_passkey) : $chama->mpesa_passkey,
         ]);
 
         AuditLog::log(

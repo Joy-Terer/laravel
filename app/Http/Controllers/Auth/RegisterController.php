@@ -10,6 +10,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
 
 class RegisterController extends Controller
 {
@@ -20,8 +21,21 @@ class RegisterController extends Controller
 
     public function store(RegisterRequest $request)
     {
-        $chama = Chama::where('code', strtoupper($request->chama_code))->firstOrFail();
+        $chama = Chama::where('code', strtoupper($request->chama_code))->first();
 
+        if (!$chama) {
+            return back()->withErrors(['chama_code' => 'Invalid Chama code. Please check and try again.'])->withInput();
+        }
+
+        if ($chama->status !== 'active') {
+            return back()->withErrors(['chama_code' => 'This Chama is not active. Please contact the administrator.'])->withInput();
+        }
+
+        if($chama->members()->count() >= $chama->max_members) {
+            return back()->withErrors(['chama_code' => 'This Chama has reached its maximum number of members.'])->withInput();
+        }
+
+      // Create the user with pending status
         $user = User::create([
             'chama_id' => $chama->id,
             'name'     => $request->first_name . ' ' . $request->last_name,
@@ -32,7 +46,7 @@ class RegisterController extends Controller
             'status'   => 'pending',
         ]);
 
-                // If this is the first member (the admin), give chama a 14-day Premium trial
+        // If this is the first member (the admin), give chama a 14-day Premium trial
         $isFirstMember = $chama->members()->count() === 1;
  
         if ($isFirstMember) {
@@ -69,7 +83,12 @@ class RegisterController extends Controller
         $message = $isFirstMember
             ? 'Registration successful! Your chama has been activated with a 14-day Premium trial. Please wait for approval.'
             : 'Registration successful! Your account is pending approval.';
+
+            dd('Redirecting to pending page now...', $request->first_name, $chama->name);
  
-        return redirect()->route('login')->with('status', $message);
+        return redirect()->route('register.pending')
+        ->with('registered_name', $request->first_name )
+        ->with('registered_chama', $chama->name);
+
     }
 }

@@ -88,7 +88,7 @@ class User extends Authenticatable
     public function hasActiveLoan(): bool
     {
         return $this->loans()
-            ->whereIn('status', ['approved', 'active'])
+            ->where('balance', '>', 0)
             ->exists();
     }
 

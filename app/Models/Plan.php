@@ -30,6 +30,12 @@ class Plan extends Model
         'price_usd'               => 'decimal:2',
     ];
 
+    // Use slug for route model binding
+    public function getRouteKeyName():string
+    {
+        return 'slug';
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);

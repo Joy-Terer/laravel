@@ -22,12 +22,13 @@ class ChamaSettingsRequest extends FormRequest
             'contribution_amount'    => ['required', 'numeric', 'min:100'],
             'contribution_frequency' => ['required', 'in:weekly,monthly,quarterly'],
             'phone'                  => ['nullable', 'string', 'max:20'],
-            'mpesa_type'             => ['required', 'in:paybill,till'],
+            'mpesa_type'             => ['required', 'in:paybill,till,pochi la biashara,send money'],
             'mpesa_shortcode'        => ['required', 'string', 'max:20', 'regex:/^\d+$/'],
             'mpesa_account_name'     => ['nullable', 'string', 'max:100'],
             'mpesa_consumer_key'     => ['nullable', 'string'],
             'mpesa_consumer_secret'  => ['nullable', 'string'],
             'mpesa_passkey'          => ['nullable', 'string'],
+            'logo'=>['nullable', 'image','mimes:png,jpg,webp', 'max:2048']
         ];
     }
 

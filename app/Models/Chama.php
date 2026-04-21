@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Chama extends Model
 {
@@ -13,14 +14,29 @@ class Chama extends Model
         'name', 'description', 'code', 'balance',
         'contribution_amount', 'contribution_frequency',
         'admin_id', 'plan_id', 'subdomain', 'logo',
-        'primary_color', 'is_active',
+        'primary_color', 'subscription_plan', 'subscription_status', 'is_active', 'trial_ends_at',
     ];
 
-    protected $casts = [
-        'balance'             => 'decimal:2',
-        'contribution_amount' => 'decimal:2',
-        'is_active'           => 'boolean',
-    ];
+    protected static function booted(): void 
+    {
+        static::creating(function ($chama) {     
+            $chama->code = static::generateUniqueCode();
+            $chama->trial_ends_at = now()->addDays(14);
+            $chama->subscription_plan = 'free';
+            $chama->subscription_status = 'trial';
+        });
+    }
+
+    public static function generateUniqueCode(): string
+    {
+        do {
+            // Format: CHA-XXXX-YYYY where XXXX is a random 4-character string and YYYY is the current year
+            $code = 'CHA-' . strtoupper(Str::random(4)) . '-' . now()->year;
+        } while (static::where('code', $code)->exists());
+
+        return $code;
+    }
+
 
     // ── Relationships ──────────────────────────────────────────────
     public function admin(): BelongsTo

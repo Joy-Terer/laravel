@@ -527,7 +527,11 @@
 <!-- TESTIMONIALS -->
 <section class="testimonials" id="testimonials">
   <h2 class="section-title reveal">Testimonials</h2>
-    
+  <div class="t-grid">
+    <div class="tcard reveal d1">
+      <p>"Managing our chama has never been this easy. All our records, contributions, and accounting are in real-time. We finally have full visibility."</p>
+      <div class="t-author"><div class="t-avatar">WM</div><div><div class="t-name">Grace K Matere</div><div class="t-group">Journey ladies</div></div></div>
+    </div>
 </section>
 
 <!-- WHO WE SERVE -->
@@ -634,6 +638,24 @@
       if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
     });
   });
+
+  let currentSlide = 0;
+const slides = document.getElementById('slides');
+const dots = document.querySelectorAll('.dot');
+
+function goSlide(index) {
+    currentSlide = index;
+    slides.style.transform = `translateX(-${index * 100}%)`;
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+    });
+}
+
+// Auto-slide every 5 seconds
+setInterval(() => {
+    currentSlide = (currentSlide + 1) % 3;
+    goSlide(currentSlide);
+}, 5000);
 </script>
 </body>
 </html>

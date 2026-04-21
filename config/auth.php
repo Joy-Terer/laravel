@@ -1,10 +1,5 @@
 <?php
 
-// ============================================================
-// FILE: config/auth.php
-// REPLACE the entire file with this
-// ============================================================
-
 return [
 
     'defaults' => [
@@ -41,8 +36,8 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table'    => 'password_reset_tokens',
-            'expire'   => 60,
+            'table'    => env('PASSWORD_RESET_TOKENS_TABLE', 'password_reset_tokens'),
+            'expire'   => 30,
             'throttle' => 60,
         ],
     ],

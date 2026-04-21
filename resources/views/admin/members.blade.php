@@ -39,7 +39,7 @@
 
 <!-- PENDING APPROVALS -->
 @if($members->where('status','pending')->count() > 0)
-<div class="card mb-3">
+<div class="card mb-4">
     <div class="card-header-custom">
         <span class="card-title-custom">Pending Approvals</span>
         <span class="badge-custom badge-warning">{{ $members->where('status','pending')->count() }} waiting</span>

@@ -54,6 +54,16 @@ class ProfileController extends Controller
 
         return back()->with('success', 'Password updated successfully.');
     }
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')
+            ->with('status', 'You have been logged out successfully.');
+    }
 
     // ── Delete account ────────────────────────────────────────────
     public function destroy(Request $request)

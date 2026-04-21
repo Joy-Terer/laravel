@@ -10,11 +10,11 @@ class LoanPolicy
 {
     public function manage(User $user, Loan $loan) : bool
     {
-        return in_array($user->role, ['treasures' , 'admin']) && $user->chama_id === $loan->chama_id;
+        return in_array($user->role, ['treasurer' , 'admin']) && $user->chama_id === $loan->chama_id;
     }
 
     public function repay(User $user, Loan $loan) : bool
     {
-        return in_array($user->role, ['treasures' , 'admin']) && $user->chama_id === $loan->chama_id;
+        return in_array($user->role, ['treasurer' , 'admin']) && $user->chama_id === $loan->chama_id;
     }
 }

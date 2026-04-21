@@ -28,6 +28,9 @@ class AdminController extends Controller
     // ── Approve member ────────────────────────────────────────────
     public function approveMember(Request $request, User $user)
     {
+        if ($user->chama_id !== Auth::user()->chama_id) {
+            return back()->withErrors(['member' => 'You are not authorized to approve this member.']);
+        }
         $user->update(['status' => 'active']);
 
         // Notify the member their account is approved
@@ -43,6 +46,9 @@ class AdminController extends Controller
     // ── Reject member ─────────────────────────────────────────────
     public function rejectMember(Request $request, User $user)
     {
+        if ($user->chama_id !== Auth::user()->chama_id) {
+            return back()->withErrors(['member' => 'You are not authorized to reject this member.']);
+        }
         $user->update(['status' => 'rejected']);
 
         AuditLog::log('member.rejected',

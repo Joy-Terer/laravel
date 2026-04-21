@@ -10,13 +10,17 @@ return new class extends Migration
     {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
+            $table->index('action');
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('action');
             $table->text('description');
             $table->string('ip_address', 45)->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
+
+            $table->fullText('description');
         });
+
     }
 
     public function down(): void

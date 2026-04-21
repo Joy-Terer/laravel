@@ -14,7 +14,10 @@ class SuperadminSeeder extends Seeder
             'email' => 'joytracycheptoo@gmail.com',
         ], [
             'name' => 'Mutai Joy',
-            'password' => Hash::make('mutai#05'),
+            'password' => Hash::make(env('SUPERADMIN_PASSWORD', 'CHANGE_ME_NOW'))??
+            throw new \RuntimeException('SUPERADMIN_PASSWORD environment variable is not set.'),
+             
+
         ]);
     }
 }

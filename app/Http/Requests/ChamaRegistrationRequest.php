@@ -2,6 +2,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class ChamaRegistrationRequest extends FormRequest
 {
@@ -20,7 +21,7 @@ class ChamaRegistrationRequest extends FormRequest
             'contribution_frequency' => ['required', 'in:weekly,monthly,quarterly'],
 
             // M-Pesa details
-            'mpesa_type'          => ['required', 'in:paybill,till'],
+            'mpesa_type'          => ['required', 'in:paybill,till,pochi,sendmoney'],
             'mpesa_shortcode'     => ['required', 'string', 'max:20', 'regex:/^\d+$/'],
             'mpesa_account_name'  => ['nullable', 'string', 'max:100'],
             'mpesa_consumer_key'  => ['nullable', 'string'],
@@ -31,7 +32,12 @@ class ChamaRegistrationRequest extends FormRequest
             'admin_name'          => ['required', 'string', 'max:100'],
             'admin_email'         => ['required', 'email', 'unique:users,email'],
             'admin_phone'         => ['required', 'string', 'regex:/^(\+?254|0)[17]\d{8}$/'],
-            'admin_password'      => ['required', 'confirmed', 'min:8'],
+            'admin_password'      => ['required', 'confirmed',
+              Password::min(8)
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised()],
         ];
     }
 
@@ -39,7 +45,7 @@ class ChamaRegistrationRequest extends FormRequest
     {
         return [
             'mpesa_shortcode.regex'  => 'M-Pesa shortcode must be numbers only.',
-            'admin_phone.regex'      => 'Enter a valid Kenyan phone number.',
+            'admin_phone.regex'      => 'Enter a valid phone number.',
             'admin_email.unique'     => 'This email is already registered.',
             'contribution_amount.min'=> 'Minimum contribution amount is KES 100.',
         ];

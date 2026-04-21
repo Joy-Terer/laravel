@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Chama;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Crypt;
 
 class MpesaService
 {
@@ -46,10 +47,13 @@ class MpesaService
         ?Chama  $chama = null
     ): array {
         // Use chama's credentials if they have their own, else fall back to platform
-        $consumerKey    = ($chama?->mpesa_consumer_key) ?: config('mpesa.consumer_key');
-        $consumerSecret = ($chama?->mpesa_consumer_secret) ?: config('mpesa.consumer_secret');
+        $consumerKey    = ($chama?->mpesa_consumer_key) 
+        ?Crypt::decrypt($chama->mpesa_consumer_key): config('mpesa.consumer_key');
+        $consumerSecret = ($chama?->mpesa_consumer_secret) 
+        ?Crypt::decrypt($chama->mpesa_consumer_secret): config('mpesa.consumer_secret');
         $shortCode      = ($chama?->mpesa_shortcode) ?: config('mpesa.shortcode');
-        $passKey        = ($chama?->mpesa_passkey) ?: config('mpesa.passkey');
+        $passKey        = ($chama?->mpesa_passkey) 
+        ?Crypt::decrypt($chama->mpesa_passkey): config('mpesa.passkey');
         $callbackUrl    = config('mpesa.callback_url');
 
         if (!$consumerKey || !$consumerSecret) {

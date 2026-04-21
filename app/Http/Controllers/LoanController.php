@@ -4,15 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoanRequest;
 use App\Models\Contribution;
+use App\Models\User;
 use App\Models\Loan;
 use App\Models\Repayment;
 use App\Models\AuditLog;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class LoanController extends Controller
 {
+    use AuthorizesRequests;
     public function __construct(private NotificationService $notifications) {}
 
     // ── List ──────────────────────────────────────────────────────
@@ -73,6 +77,9 @@ class LoanController extends Controller
     // ── Approve ───────────────────────────────────────────────────
     public function approve(Request $request, Loan $loan)
     {
+        if($loan->chama_id !== Auth::user()->chama_id) {
+            abort(403, 'You do not have permission to manage this loan.');
+        }
         $this->authorize('manage', $loan);
 
         if ($loan->status !== 'pending') {
@@ -106,6 +113,9 @@ class LoanController extends Controller
     // ── Decline ───────────────────────────────────────────────────
     public function decline(Request $request, Loan $loan)
     {
+        if($loan->chama_id !== Auth::user()->chama_id) {
+            abort(403, 'You do not have permission to manage this loan.');
+        }
         $this->authorize('manage', $loan);
 
         $request->validate([
@@ -132,10 +142,12 @@ class LoanController extends Controller
     // ── Repay ─────────────────────────────────────────────────────
     public function repay(Request $request, Loan $loan)
     {
+        DB::transaction(function() use ($request, $loan, $newBalance) {
         $request->validate([
             'amount'         => ['required', 'numeric', 'min:1', 'max:' . $loan->balance],
             'payment_method' => ['required', 'in:mpesa,paypal,wave,cash'],
         ]);
+        });
 
         if ($loan->user_id !== Auth::id()) {
             abort(403, 'Unauthorised action.');
